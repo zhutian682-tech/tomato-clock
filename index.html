@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拖延克星 · 田田专属</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: 'PingFang SC','Helvetica Neue',sans-serif;
+  padding: 28px; transition: background 1s;
+  background: linear-gradient(135deg,#fdf0f8 0%,#eef0ff 50%,#f5eeff 100%);
+}
+.label { color: #a78bba; font-size: 11px; letter-spacing: 3px; margin-bottom: 6px; font-weight: 500; }
+.deco { font-size: 18px; margin-bottom: 10px; opacity: .5; }
+.ring-wrap { position: relative; width: 210px; height: 210px; margin: 8px 0 16px; }
+.glow {
+  position: absolute; inset: 16px; border-radius: 50%;
+  transition: background .8s;
+}
+.time-center {
+  position: absolute; inset: 0; display: flex;
+  flex-direction: column; align-items: center; justify-content: center;
+}
+.time-text { font-size: 44px; font-weight: 300; color: #5b4b7a; letter-spacing: -1px; }
+.phase-text { font-size: 11px; color: #a78bba; margin-top: 4px; }
+.dots { display: flex; gap: 7px; margin-bottom: 18px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; transition: all .4s; }
+.task-label-area { width: 100%; max-width: 320px; margin-bottom: 14px; }
+.task-sub { color: #a78bba; font-size: 11px; margin-bottom: 9px; letter-spacing: 1px; }
+.tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+.tag {
+  padding: 6px 13px; border-radius: 20px; border: none;
+  font-size: 12px; cursor: pointer; transition: all .25s;
+  backdrop-filter: blur(6px); background: rgba(255,255,255,.55); color: #a78bba;
+}
+.tag.active {
+  background: linear-gradient(90deg,#f9a8d4,#c084fc);
+  color: #fff; box-shadow: 0 2px 10px #c084fc44;
+}
+input {
+  width: 100%; padding: 10px 14px; border-radius: 14px;
+  border: 1.5px solid #e9d5ff;
+  background: rgba(255,255,255,.6); color: #5b4b7a; font-size: 13px;
+  outline: none; transition: border .3s; backdrop-filter: blur(6px);
+}
+input:focus { border-color: #c084fc; }
+.current-task {
+  font-size: 12px; margin-bottom: 14px;
+  padding: 5px 16px; background: rgba(255,255,255,.55);
+  border-radius: 20px; backdrop-filter: blur(6px);
+}
+.quote {
+  font-size: 13px; text-align: center; max-width: 280px;
+  margin-bottom: 22px; line-height: 1.7; color: #a78bba; min-height: 44px; cursor: pointer;
+}
+.quote-hint { color: #e9d5ff; font-size: 11px; display: block; margin-top: 2px; }
+.btns { display: flex; gap: 12px; }
+button.main {
+  padding: 13px 38px; border-radius: 16px; border: none;
+  background: linear-gradient(135deg,#f9a8d4,#c084fc);
+  color: #fff; font-size: 15px; cursor: pointer; font-weight: 500;
+  box-shadow: 0 4px 18px #c084fc55; transition: all .3s;
+}
+button.main:disabled { background: #e9d5ff; box-shadow: none; cursor: not-allowed; }
+button.ghost {
+  padding: 12px 28px; border-radius: 14px;
+  border: 1.5px solid #e9d5ff;
+  background: rgba(255,255,255,.55); color: #a78bba;
+  font-size: 13px; cursor: pointer; backdrop-filter: blur(6px);
+}
+button.blue {
+  padding: 13px 24px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg,#93c5fd,#c084fc);
+  color: #fff; font-size: 13px; cursor: pointer;
+  box-shadow: 0 4px 14px #93c5fd55;
+}
+button.outline {
+  padding: 13px 24px; border-radius: 14px;
+  border: 1.5px solid #c084fc;
+  background: rgba(255,255,255,.55); color: #c084fc;
+  font-size: 13px; cursor: pointer; backdrop-filter: blur(6px);
+}
+.rounds-text { color: #e9d5ff; font-size: 12px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="label">拖延克星 · 田田专属</div>
+<div class="deco">✦ ✧ ✦</div>
+
+<div class="ring-wrap">
+  <div class="glow" id="glow"></div>
+  <svg width="210" height="210" style="transform:rotate(-90deg)">
+    <circle cx="105" cy="105" r="88" fill="none" stroke="#e9d5ff" stroke-width="7"/>
+    <circle id="ring" cx="105" cy="105" r="88" fill="none" stroke="#f9a8d4"
+      stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="552.9" stroke-dashoffset="552.9"
+      style="transition:stroke-dashoffset 1s linear,stroke .8s;filter:drop-shadow(0 0 6px #f9a8d488)"/>
+  </svg>
+  <div class="time-center">
+    <div class="time-text" id="timeText">25:00</div>
+    <div class="phase-text" id="phaseText">准备好了吗</div>
+  </div>
+</div>
+
+<div class="dots" id="dots"></div>
+
+<div class="task-label-area" id="taskArea">
+  <div class="task-sub">选一个任务</div>
+  <div class="tags" id="tags"></div>
+  <input id="customInput" placeholder="或者自己写……" oninput="onCustomInput(this.value)"/>
+</div>
+
+<div class="current-task" id="currentTask" style="display:none"></div>
+
+<div class="quote" id="quote" onclick="nextQuote()">知道的，就差最后一步😌<span class="quote-hint">点击换一句</span></div>
+
+<div class="btns" id="btns"></div>
+
+<div class="rounds-text" id="roundsText"></div>
+
+<script>
+const TASKS = ["现当代文学作品概述","外国文学框架","古代文学复习","英语单词","政治刷题","学姐讲义"];
+const EXCUSES = ["知道的，就差最后一步😌","手都放键盘上了，差一个开始","不想动是正常的，动了就不一样了","就25分钟，很快的","先坐着，坐着就是赢了","不用全力，60分的投入也算"];
+const CHEERS = ["完成了！你比你想的强多了🌹","25分钟，田田做到了","就这样，一块一块来","不赖嘛，继续？","莱羽看见了✓"];
+const CIRC = 2 * Math.PI * 88;
+
+let phase = "idle", seconds = 1500, task = "", customTask = "", rounds = 0, qIdx = 0, timer = null;
+
+const ACCENTS = { work:"#c084fc", rest:"#93c5fd", idle:"#f9a8d4", done:"#c084fc" };
+const BGS = {
+  work:"linear-gradient(135deg,#f9e8f4 0%,#e8eeff 50%,#f0e6ff 100%)",
+  rest:"linear-gradient(135deg,#e0f0ff 0%,#f3e8ff 60%,#fce4f0 100%)",
+  idle:"linear-gradient(135deg,#fdf0f8 0%,#eef0ff 50%,#f5eeff 100%)",
+  done:"linear-gradient(135deg,#f9e8f4 0%,#e8eeff 50%,#f0e6ff 100%)"
+};
+
+function fmt(s){ return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+
+function render(){
+  const acc = ACCENTS[phase];
+  document.body.style.background = BGS[phase];
+  document.getElementById('glow').style.background = `radial-gradient(circle,${acc}22 0%,transparent 70%)`;
+  document.getElementById('ring').style.stroke = acc;
+  document.getElementById('ring').style.filter = `drop-shadow(0 0 6px ${acc}88)`;
+  const total = phase==='rest'?300:1500;
+  const prog = 1 - seconds/total;
+  document.getElementById('ring').style.strokeDashoffset = CIRC*(1-prog);
+  document.getElementById('timeText').textContent = fmt(seconds);
+  const phaseLabels = {work:"专注中 🌸",rest:"休息中 🫧",done:"完成！🌹",idle:"准备好了吗"};
+  document.getElementById('phaseText').textContent = phaseLabels[phase];
+
+  // dots
+  const d = document.getElementById('dots');
+  const n = Math.max(rounds,4);
+  d.innerHTML = Array.from({length:n}).map((_,i)=>
+    `<div class="dot" style="background:${i<rounds?acc:'#e9d5ff'};box-shadow:${i<rounds?`0 0 6px ${acc}`:'none'}"></div>`
+  ).join('');
+
+  // task area
+  document.getElementById('taskArea').style.display = phase==='idle'?'block':'none';
+  const ct = document.getElementById('currentTask');
+  if(phase!=='idle'&&(task||customTask)){
+    ct.style.display='block'; ct.style.color=acc;
+    ct.style.boxShadow=`0 2px 12px ${acc}33`;
+    ct.textContent = customTask||task;
+  } else { ct.style.display='none'; }
+
+  // quote clickable only idle
+  document.getElementById('quote').style.cursor = phase==='idle'?'pointer':'default';
+
+  // buttons
+  const b = document.getElementById('btns');
+  if(phase==='idle'){
+    const ok = task||customTask;
+    b.innerHTML = `<button class="main" ${ok?'':'disabled'} onclick="startTimer()">开始 25 分钟</button>`;
+  } else if(phase==='work'){
+    b.innerHTML = `<button class="ghost" onclick="resetTimer()">放弃这轮</button>`;
+  } else if(phase==='done'){
+    b.innerHTML = `<button class="blue" onclick="startRest()">休息 5 分钟</button><button class="outline" onclick="resetTimer()">再来一轮</button>`;
+  } else if(phase==='rest'){
+    b.innerHTML = `<button class="ghost" onclick="resetTimer()">跳过休息</button>`;
+  }
+
+  // rounds
+  const rt = document.getElementById('roundsText');
+  rt.textContent = rounds>0?`今天完成了 ${rounds} 轮 · ${rounds*25} 分钟 ✦`:'';
+}
+
+function buildTags(){
+  const c = document.getElementById('tags');
+  c.innerHTML = TASKS.map(t=>
+    `<button class="tag ${task===t?'active':''}" onclick="selectTask('${t}')">${t}</button>`
+  ).join('');
+}
+
+function selectTask(t){ task=t; document.getElementById('customInput').value=''; customTask=''; buildTags(); render(); }
+function onCustomInput(v){ customTask=v; task=''; buildTags(); render(); }
+
+function startTimer(){
+  if(!task&&!customTask)return;
+  phase='work'; seconds=1500;
+  setQuote(EXCUSES[Math.floor(Math.random()*EXCUSES.length)]);
+  clearInterval(timer);
+  timer=setInterval(tick,1000);
+  render();
+}
+function startRest(){
+  phase='rest'; seconds=300;
+  clearInterval(timer);
+  timer=setInterval(tick,1000);
+  render();
+}
+function resetTimer(){
+  clearInterval(timer);
+  phase='idle'; seconds=1500;
+  setQuote(EXCUSES[Math.floor(Math.random()*EXCUSES.length)]);
+  render();
+}
+function tick(){
+  seconds--;
+  if(seconds<=0){
+    clearInterval(timer);
+    if(phase==='work'){
+      rounds++; phase='done';
+      setQuote(CHEERS[Math.floor(Math.random()*CHEERS.length)]);
+    } else {
+      phase='idle'; seconds=1500;
+      setQuote(EXCUSES[Math.floor(Math.random()*EXCUSES.length)]);
+    }
+  }
+  render();
+}
+function nextQuote(){
+  if(phase!=='idle')return;
+  qIdx=(qIdx+1)%EXCUSES.length;
+  setQuote(EXCUSES[qIdx]);
+}
+function setQuote(q){
+  const el=document.getElementById('quote');
+  el.innerHTML=q+(phase==='idle'?'<span class="quote-hint">点击换一句</span>':'');
+}
+
+buildTags(); render();
+</script>
+</body>
+</html>

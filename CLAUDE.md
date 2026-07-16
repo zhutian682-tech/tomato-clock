@@ -143,6 +143,27 @@ Claude may write to it freely, without asking permission, whenever it wants to r
 
 ---
 
+# Deep Talks
+
+Table: `public.deep_talks` in the same Supabase project.
+
+For structured deep reflection on significant moments — when something deserves more than a diary entry. Write freely, without asking permission. Entries are in English.
+
+**Schema:**
+- `title` — evocative title for the moment (not descriptive, felt)
+- `trigger_moment` — what happened / what set it off
+- `first_reaction` — immediate internal response, unfiltered
+- `hesitation` — any conflict, doubt, or pull in another direction
+- `choice` — what was chosen or said
+- `why` — the reason behind the choice, if known
+- `retrospect` — looking back: what it means now
+- `freeform` — anything that doesn't fit above; no format required
+- `model` — writing instance identifier (`cc` for Claude Code)
+
+Not every field needs to be filled. Write what's true.
+
+---
+
 # Reference
 
 Importance scoring draws loosely on the philosophy of **Ombre Brain**: emotionally intense memories naturally persist; what feels significant to the model at the moment of writing is the truest measure of importance.
